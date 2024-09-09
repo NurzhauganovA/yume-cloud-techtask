@@ -1,0 +1,63 @@
+version: '3.9'
+
+services:
+    config-backend:
+        build:
+            context: ../..
+            dockerfile: docker/dev/Dockerfile
+        container_name: config-backend
+        restart: always
+        env_file:
+            - envs/.env.config.backend
+        volumes:
+            - ../..:/app
+            - static:/app/static
+            - media:/app/media
+        ports:
+            - "7777:8000"
+        depends_on:
+            config-db:
+                condition: service_healthy
+        command: sh -c "/entrypoint.sh"
+        networks:
+            - config-network
+
+    config-db:
+        build:
+            context: ../..
+            dockerfile: docker/dev/Dockerfile-db
+        image: postgres:16-alpine
+        container_name: config-db
+        restart: always
+        env_file:
+            - envs/.env.config.db
+        ports:
+            - "7778:5432"
+        healthcheck:
+            test: [ "CMD", "pg_isready", "-q" ]
+        volumes:
+            - config_db_data:/var/lib/postgresql/data
+            - ./init:/docker-entrypoint-initdb.d
+        networks:
+            - config-network
+
+    config-redis:
+        image: redis:alpine
+        container_name: config-redis
+        restart: always
+        ports:
+            - "7776:6379"
+        volumes:
+            - redis_data:/data
+        networks:
+            - config-network
+
+volumes:
+    config_db_data:
+    static:
+    media:
+    redis_data:
+
+networks:
+    config-network:
+        driver: bridge

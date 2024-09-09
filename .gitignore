@@ -1,0 +1,10 @@
+.idea/
+**/__pycache__
+*.py[cod]
+.DS_Store
+
+db.sqlite3
+
+.venv/
+docker/dev/envs
+docker/prod/envs
